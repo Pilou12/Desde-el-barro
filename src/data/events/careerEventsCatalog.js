@@ -359,14 +359,36 @@ export const CAREER_EVENTS_CATALOG = [
       {
         text: "Agarrar la pelota y hacerte cargo de la presión",
         action: "TAKE_PENALTY",
-        famaBonus: 20,
-        idolBonus: 10 // Se asume que entra!
+        famaBonus: 0,
+        idolBonus: 0 // La recompensa se maneja en la resolución del minijuego
       },
       {
         text: "Dejárselo al capitán del equipo",
         action: "LEAVE_PENALTY",
         famaBonus: -5,
         idolBonus: 1
+      }
+    ]
+  },
+  {
+    id: "tiro-libre-decisivo",
+    positions: ["todos"],
+    minAge: 17,
+    maxAge: 40,
+    title: "🎯 Tiro libre en la medialuna",
+    description: "Falta al borde del área en el minuto 90. Es tu oportunidad ideal para clavarla al ángulo y darle la victoria al equipo.",
+    options: [
+      {
+        text: "Pedir la pelota y patear el tiro libre",
+        action: "TAKE_FREEKICK",
+        famaBonus: 0,
+        idolBonus: 0
+      },
+      {
+        text: "Dejar que patee el especialista del equipo",
+        action: "LEAVE_FREEKICK",
+        famaBonus: -2,
+        idolBonus: 2
       }
     ]
   },
