@@ -1,3 +1,5 @@
+import { calculateQualifiedCups } from "../data/cups/cupsCatalog.js";
+
 export class SeasonSimulator {
   constructor(stateManager, cupManager, marketManager) {
     this.stateManager = stateManager;
@@ -38,7 +40,7 @@ export class SeasonSimulator {
       for (const league of allLeagues) {
         allStandings[league.id] = league.simulateStandings(state.currentTeam.id, playerOVR);
       }
-      
+
       state.cupWinners = state.cupWinners || {};
       const cups = ["libertadores", "sudamericana", "copa_argentina"];
       for (const cup of cups) {
@@ -103,8 +105,8 @@ export class SeasonSimulator {
 
       state.player.addSeasonRecord(record);
       state.lastSeasonResult = {
-          seasonRecord: record,
-          isRetired: state.player.isRetired
+        seasonRecord: record,
+        isRetired: state.player.isRetired
       };
 
       let exposureGained = state.currentLeague.exposureGain ?? 5;
@@ -117,19 +119,18 @@ export class SeasonSimulator {
         state.player.addIdolScore(state.currentTeam.id, 50, state.currentTeam.power);
       }
 
-      state.player.qualifiedCups = [];
-      if (state.currentTeam.country === "ar") {
-        state.player.qualifiedCups.push("copa_argentina");
-      }
+      // Calcular clasificaciones del año siguiente usando el catálogo centralizado
+      const myRankNext = myLeagueStandings
+        ? myLeagueStandings.findIndex(s => s.team.id === state.currentTeam.id) + 1
+        : 999;
 
-      if (state.currentTeam.tier === 1 && myLeagueStandings) {
-        const myRank = myLeagueStandings.findIndex(s => s.team.id === state.currentTeam.id) + 1;
-        if (myRank <= 4) {
-          state.player.qualifiedCups.push("libertadores");
-        } else if (myRank <= 10) {
-          state.player.qualifiedCups.push("sudamericana");
-        }
-      }
+      state.player.qualifiedCups = calculateQualifiedCups({
+        currentTeam: state.currentTeam,
+        leagueRank: myRankNext,
+        leagueTier: state.currentTeam.tier,
+        cupWinners: state.cupWinners,
+        country: state.currentTeam.country ?? "ar",
+      });
 
       const avgWageByTier = { 1: 200000, 2: 20000, 3: 5000, 4: 1500 };
       if (state.currentTeam.wageBudget > (avgWageByTier[state.currentTeam.tier] ?? 5000)) {
@@ -148,7 +149,7 @@ export class SeasonSimulator {
       const allLgs = state.leagueManager.getAllLeagues();
       state.currentTransferOffers = this.marketManager.generateOffersForPlayer(state.player, state.currentTeam, allLgs, 3);
       state.seasonPhase = "TRANSFER_MARKET";
-      
+
       state.screen = state.player.isRetired ? "RETIREMENT" : "SEASON_SUMMARY";
     });
   }

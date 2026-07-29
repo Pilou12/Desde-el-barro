@@ -22,7 +22,7 @@ export class AppRouter {
     this.cupManager = cupManager;
     this.seasonSimulator = seasonSimulator;
     this.economyManager = economyManager;
-    
+
     // View Dependencies Map
     this.viewDeps = {
       gameManager,
@@ -33,9 +33,6 @@ export class AppRouter {
       economyManager,
       appRouter: this
     };
-
-    // Vistas que ya existían y manejaban su propia lógica interna para minijuegos
-    this.minigameView = new MinigameView(this.container, this.stateManager, this.eventBus, this.cupManager, this.seasonSimulator);
 
     if (this.eventBus) {
       this.eventBus.on("stateChanged", () => {
@@ -69,18 +66,24 @@ export class AppRouter {
   }
 
   render() {
+    // Destruir vista activa anterior si tiene cleanup (ej: MinigameView desuscribe listeners)
+    if (this._activeView && typeof this._activeView.destroy === "function") {
+      this._activeView.destroy();
+    }
+    this._activeView = null;
+
     this.container.innerHTML = "";
 
     const brandHeader = `
       <header class="header-brand">
-        <h1>EL ÍDOLO ENHANCED</h1>
+        <h1>DESDE EL BARRO</h1>
         <p>Hacé tu carrera profesional en el Fútbol Argentino y Mundial</p>
       </header>
     `;
 
     // Contenedor principal de la vista
     const mainContent = document.createElement("main");
-    
+
     this.container.innerHTML = brandHeader;
     this.container.appendChild(mainContent);
 
@@ -116,15 +119,20 @@ export class AppRouter {
         break;
       case "CUP_MATCH":
       case "NARRATIVE_MINIGAME":
-        // Estas pantallas actualmente las maneja MinigameView (o AppUI anterior)
-        // Por ahora si llegamos acá devolvemos el container al MinigameView que escucha eventos propios
-        // (En la arquitectura real de este proyecto, MinigameView reacciona a stateChanged internamente)
+        activeView = new MinigameView(
+          mainContent,
+          this.stateManager,
+          this.eventBus,
+          this.cupManager,
+          this.seasonSimulator
+        );
         break;
       default:
         activeView = new StartMenuView(mainContent, this.viewDeps);
     }
 
     if (activeView) {
+      this._activeView = activeView;
       activeView.render();
     }
   }

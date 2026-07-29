@@ -1,5 +1,6 @@
 import { BaseMinigame } from "./BaseMinigame.js";
 import { PenaltyShootoutMinigame } from "./PenaltyShootoutMinigame.js";
+import { getCupMatrixConfig } from "../../data/cups/cupsCatalog.js";
 
 export class MatrixMinigame extends BaseMinigame {
   /**
@@ -9,17 +10,12 @@ export class MatrixMinigame extends BaseMinigame {
     super("matrix", isNarrative);
     this.cupType = cupType;
     this.playerStat = playerStat;
-    
-    const size = 64; // 8x8 matrix
-    this.requiredWins = 6;
-    let maxDraws = 4;
 
-    switch (cupType) {
-      case "libertadores": this.requiredWins = 7; maxDraws = 3; break;
-      case "sudamericana": this.requiredWins = 7; maxDraws = 3; break;
-      case "recopa": this.requiredWins = 2; maxDraws = 2; break; // Ida y vuelta
-      case "copa_argentina": this.requiredWins = 6; maxDraws = 4; break;
-    }
+    // Obtener configuración desde el catálogo centralizado
+    const cupConfig = getCupMatrixConfig(cupType);
+    const size = cupConfig.gridSize ?? 64;
+    this.requiredWins = cupConfig.requiredWins ?? 6;
+    let maxDraws = cupConfig.maxDraws ?? 4;
 
     const collectiveStrength = (teamPower * 0.7) + (playerOVR * 0.3);
     this.difficultyLabel = "NORMAL";
@@ -117,14 +113,14 @@ export class MatrixMinigame extends BaseMinigame {
       this.currentOpponentTeamId = randomOpponentTeam ? randomOpponentTeam.id : null;
       this.currentOpponent = oppName;
       this.matchScore = `${goals}-${goals}`;
-      
+
       this.penaltyShootout = new PenaltyShootoutMinigame(this.playerStat, false);
     }
   }
 
   resolvePenaltyEnd() {
     if (this.status !== "PENALTIES" || !this.penaltyShootout) return;
-    
+
     const shootout = this.penaltyShootout;
     const opp = this.currentOpponent || "Rival";
     const score = this.matchScore || "1-1";

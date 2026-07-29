@@ -7,7 +7,7 @@ import { SeasonNarrator } from '../../domain/SeasonNarrator.js';
 export class TransferMarketView extends View {
   getTemplate() {
     const offers = this.state.currentTransferOffers;
-    
+
     const offersHTML = offers.map((offer, idx) => {
       return `
         <div class="transfer-card">
@@ -61,13 +61,13 @@ export class TransferMarketView extends View {
   }
 
   bindEvents() {
-// Aceptar oferta de transferencia
+    // Aceptar oferta de transferencia
     const acceptBtns = document.querySelectorAll(".btn-accept-transfer");
     acceptBtns.forEach(btn => {
-      btn.onclick = (e) => {
-        const idx = Number(e.currentTarget.getAttribute("data-offer-index"));
+      btn.onclick = () => {
+        const idx = Number(btn.getAttribute("data-offer-index"));
         this.deps.economyManager.acceptTransferOffer(idx);
-        this.deps.stateManager.update({screen: "DASHBOARD"});
+        this.deps.stateManager.update({ screen: "DASHBOARD" });
         this.deps.appRouter.render();
       };
     });
@@ -77,7 +77,7 @@ export class TransferMarketView extends View {
     if (btnRejectTransfers) {
       btnRejectTransfers.onclick = () => {
         this.deps.economyManager.rejectAllTransferOffers();
-        this.deps.stateManager.update({screen: "DASHBOARD"});
+        this.deps.stateManager.update({ screen: "DASHBOARD" });
         this.deps.appRouter.render();
       };
     }

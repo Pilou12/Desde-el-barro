@@ -12,7 +12,7 @@ export class SeasonSummaryView extends View {
 
     // Stats dinámicas según posición
     const posStats = SeasonNarrator.getPositionStats(record, positionKey);
-    
+
     // Agregar OVR y Exposición como métricas de progreso de carrera extra
     posStats.push({ icon: "📈", label: "OVR Final", value: player.calculateOVR(), color: "var(--accent-green)" });
     posStats.push({ icon: "📡", label: "Exposición", value: player.exposure ?? 0, color: "#ff9500" });
@@ -65,24 +65,24 @@ export class SeasonSummaryView extends View {
       <div style="margin-top: 24px; border-top: 1px solid var(--border-glass); padding-top: 20px; text-align: left;">
         <h3 style="font-family: var(--font-heading); font-size: 1.1rem; margin-bottom: 16px; color: var(--accent-gold);">📋 Crónica de la Temporada</h3>
         <div style="display: flex; flex-direction: column; gap: 14px;">
-          ${eventResults.map(({event, option}, i) => {
-            // Construir los efectos del outcome
-            const effects = [];
-            if (option) {
-              if (option.idolBonus   > 0)  effects.push(`<span style="color:var(--accent-green);">+${option.idolBonus} Ídolo 💛</span>`);
-              if (option.famaBonus   > 0)  effects.push(`<span style="color:var(--accent-blue);">+${option.famaBonus} Reputación 🌟</span>`);
-              if (option.moneyBonus  > 0)  effects.push(`<span style="color:#4caf50;">+$${option.moneyBonus.toLocaleString()} USD 💵</span>`);
-              if (option.matchesPenalty)   effects.push(`<span style="color:#ff6b6b;">-${option.matchesPenalty} partidos 🩺</span>`);
-              if (option.statPenalty)      effects.push(`<span style="color:#ff6b6b;">Penalidad de atributo ⚠️</span>`);
-            }
-            const effectsStr = effects.length > 0
-              ? effects.join('  ·  ')
-              : '<span style="color:var(--text-muted);">Sin bonificaciones</span>';
+          ${eventResults.map(({ event, option }, i) => {
+      // Construir los efectos del outcome
+      const effects = [];
+      if (option) {
+        if (option.idolBonus > 0) effects.push(`<span style="color:var(--accent-green);">+${option.idolBonus} Ídolo 💛</span>`);
+        if (option.famaBonus > 0) effects.push(`<span style="color:var(--accent-blue);">+${option.famaBonus} Reputación 🌟</span>`);
+        if (option.moneyBonus > 0) effects.push(`<span style="color:#4caf50;">+$${option.moneyBonus.toLocaleString()} USD 💵</span>`);
+        if (option.matchesPenalty) effects.push(`<span style="color:#ff6b6b;">-${option.matchesPenalty} partidos 🩺</span>`);
+        if (option.statPenalty) effects.push(`<span style="color:#ff6b6b;">Penalidad de atributo ⚠️</span>`);
+      }
+      const effectsStr = effects.length > 0
+        ? effects.join('  ·  ')
+        : '<span style="color:var(--text-muted);">Sin bonificaciones</span>';
 
-            return `
+      return `
               <div style="background: rgba(0,0,0,0.25); border-radius: 12px; padding: 14px 16px; border-left: 3px solid var(--accent-gold);">
                 <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:6px;">
-                  <span style="font-size: 0.7rem; color: var(--text-muted); font-weight:700; text-transform:uppercase;">Evento ${i+1}</span>
+                  <span style="font-size: 0.7rem; color: var(--text-muted); font-weight:700; text-transform:uppercase;">Evento ${i + 1}</span>
                   <span style="font-family: var(--font-heading); font-size: 1rem; color: var(--text-primary);">${event.title}</span>
                 </div>
                 ${option ? `
@@ -95,7 +95,7 @@ export class SeasonSummaryView extends View {
                 <div style="font-size: 0.82rem;">${effectsStr}</div>
               </div>
             `;
-          }).join('')}
+    }).join('')}
         </div>
       </div>
     ` : '';
@@ -143,28 +143,36 @@ export class SeasonSummaryView extends View {
   }
 
   bindEvents() {
-// Resumen de Temporada (Carrusel)
+    // Resumen de Temporada (Carrusel)
     const btnPrevLeague = document.getElementById("btn-prev-league");
     if (btnPrevLeague) {
       btnPrevLeague.onclick = () => {
         const res = this.state.lastSeasonResult;
         if (res && res.seasonRecord && res.seasonRecord.allStandings) {
           const keys = Object.keys(res.seasonRecord.allStandings);
-          this.deps.stateManager.update({summaryLeagueIndex: (this.state.summaryLeagueIndex - 1 + keys.length) % keys.length});
+          this.deps.stateManager.update({ summaryLeagueIndex: (this.state.summaryLeagueIndex - 1 + keys.length) % keys.length });
           this.deps.appRouter.render();
         }
       };
     }
-    
+
     const btnNextLeague = document.getElementById("btn-next-league");
     if (btnNextLeague) {
       btnNextLeague.onclick = () => {
         const res = this.state.lastSeasonResult;
         if (res && res.seasonRecord && res.seasonRecord.allStandings) {
           const keys = Object.keys(res.seasonRecord.allStandings);
-          this.deps.stateManager.update({summaryLeagueIndex: (this.state.summaryLeagueIndex + 1) % keys.length});
+          this.deps.stateManager.update({ summaryLeagueIndex: (this.state.summaryLeagueIndex + 1) % keys.length });
           this.deps.appRouter.render();
         }
+      };
+    }
+
+    const btnOpenMarket = document.getElementById("btn-open-market");
+    if (btnOpenMarket) {
+      btnOpenMarket.onclick = () => {
+        this.deps.stateManager.update({ screen: "TRANSFER_MARKET" });
+        this.deps.appRouter.render();
       };
     }
   }

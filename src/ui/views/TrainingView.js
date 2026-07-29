@@ -60,21 +60,21 @@ export class TrainingView extends View {
 
   bindEvents() {
     const routeAfterTraining = () => {
-        const state = this.deps.stateManager.getState();
-        if (state.seasonPhase === "MIDSEASON_EVENT" && state.activeMidseasonEvent) {
-            this.deps.stateManager.update({screen: "MIDSEASON"});
-        } else if (state.seasonPhase === "CUP_NATIONAL" || state.seasonPhase === "CUP_INTERNATIONAL") {
-            this.deps.stateManager.update({screen: "CUP_MATCH"});
-        } else {
-            this.deps.seasonSimulator.finishCurrentSeason();
-        }
-        this.deps.appRouter.render();
+      const state = this.deps.stateManager.getState();
+      if (state.seasonPhase === "MIDSEASON_EVENT" && state.activeMidseasonEvent) {
+        this.deps.stateManager.update({ screen: "MIDSEASON" });
+      } else if (state.seasonPhase === "CUP_NATIONAL" || state.seasonPhase === "CUP_INTERNATIONAL") {
+        this.deps.stateManager.update({ screen: "CUP_MATCH" });
+      } else {
+        this.deps.seasonSimulator.finishCurrentSeason();
+      }
+      this.deps.appRouter.render();
     };
 
     const cardBtns = document.querySelectorAll(".btn-select-card");
     cardBtns.forEach(btn => {
-      btn.onclick = (e) => {
-        const idx = Number(e.currentTarget.getAttribute("data-card-index"));
+      btn.onclick = () => {
+        const idx = Number(btn.getAttribute("data-card-index"));
         const selectedCard = this.state.currentTrainingOptions[idx];
         if (selectedCard) {
           this.deps.gameManager.applyTrainingCard(selectedCard);

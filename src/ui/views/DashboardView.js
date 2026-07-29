@@ -82,12 +82,20 @@ export class DashboardView extends View {
   }
 
   bindEvents() {
-// Dashboard -> Pretemporada
+    // Dashboard -> Pretemporada
     const btnNextTraining = document.getElementById("btn-next-training");
     if (btnNextTraining) {
       btnNextTraining.onclick = () => {
-        this.deps.stateManager.update({currentTrainingOptions: this.deps.gameManager.getTrainingOptions()});
-        this.deps.stateManager.update({screen: "TRAINING"});
+        this.deps.stateManager.update({ currentTrainingOptions: this.deps.gameManager.getTrainingOptions() });
+        this.deps.stateManager.update({ screen: "TRAINING" });
+        this.deps.appRouter.render();
+      };
+    }
+
+    const btnOpenStore = document.getElementById("btn-open-store");
+    if (btnOpenStore) {
+      btnOpenStore.onclick = () => {
+        this.deps.stateManager.update({ screen: "STORE" });
         this.deps.appRouter.render();
       };
     }

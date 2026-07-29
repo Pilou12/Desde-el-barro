@@ -7,17 +7,26 @@ export class MinigameView {
     this.eventBus = eventBus;
     this.cupManager = cupManager;
     this.seasonSimulator = seasonSimulator;
-    
-    // Escuchar cambios de estado
-    this.eventBus.on("stateChanged", (state) => this.onStateChanged(state));
+
+    // Escuchar cambios de estado para re-renderizar en el mismo container
+    // (ej: el jugador hace click en una celda y el estado cambia dentro de CUP_MATCH)
+    this._stateHandler = (state) => {
+      if (state.screen !== "CUP_MATCH" && state.screen !== "NARRATIVE_MINIGAME") return;
+      this.render(state);
+    };
+    this.eventBus.on("stateChanged", this._stateHandler);
   }
 
-  onStateChanged(state) {
-    if (state.screen !== "CUP_MATCH" && state.screen !== "NARRATIVE_MINIGAME") return;
-    this.render(state);
+  destroy() {
+    // Limpiar listener cuando el router destruye esta vista
+    if (this._stateHandler) {
+      this.eventBus.off("stateChanged", this._stateHandler);
+    }
   }
 
   render(state) {
+    // Si no se pasa state (llamado desde AppRouter), leerlo del stateManager
+    if (!state) state = this.stateManager.getState();
     const minigame = state.activeMinigame;
     if (!minigame) return;
 
@@ -184,7 +193,7 @@ export class MinigameView {
   getPenaltyHTML(minigame, screen) {
     const isNarrative = screen === "NARRATIVE_MINIGAME";
     const shootout = isNarrative ? minigame : minigame.penaltyShootout;
-    
+
     let html = `
       <div class="dashboard-layout" style="max-width: 800px; margin: 0 auto; grid-template-columns: 1fr;">
         <div class="panel glass-panel" style="text-align: center;">
@@ -196,7 +205,7 @@ export class MinigameView {
           </p>
           
           <div style="font-size: 2rem; font-weight: bold; margin-bottom: 20px;">
-             Penales convertidos: ${shootout.playerScore} / ${shootout.currentKick}
+             Penales convertidos: ${shootout.playerScore} / ${shootout.kicks.length}
           </div>
     `;
 
@@ -225,7 +234,7 @@ export class MinigameView {
           </div>
         `;
       }
-      
+
       html += `
         <button class="btn btn-primary" id="${isNarrative ? 'btn-narrative-continue' : 'btn-penalties-continue'}">
           Continuar
@@ -294,7 +303,7 @@ export class MinigameView {
           </div>
         `;
       }
-      
+
       html += `
         <button class="btn btn-primary" id="btn-narrative-continue">
           Continuar
@@ -311,40 +320,40 @@ export class MinigameView {
 
   bindEvents(state) {
     const minigame = state.activeMinigame;
-    
+
     // Matrix clicks
     const cells = this.container.querySelectorAll(".btn-matrix-cell:not([disabled])");
     cells.forEach(cell => {
-      cell.onclick = (e) => {
-        const idx = Number(e.currentTarget.getAttribute("data-cell-index"));
-        this.deps.cupManager.resolveCupMatrixClick(idx);
+      cell.onclick = () => {
+        const idx = Number(cell.getAttribute("data-cell-index"));
+        this.cupManager.resolveCupMatrixClick(idx);
       };
     });
 
     // Penalties clicks
     const penBtns = this.container.querySelectorAll(".btn-penalty");
     penBtns.forEach(btn => {
-      btn.onclick = (e) => {
-        const dir = e.currentTarget.getAttribute("data-dir");
+      btn.onclick = () => {
+        const dir = btn.getAttribute("data-dir");
         if (minigame && minigame.isNarrative) {
           this.stateManager.mutate((s) => {
-            if(s.activeMinigame) {
+            if (s.activeMinigame) {
               // Llamamos al nuevo método de la clase
               s.activeMinigame.resolveKick(dir);
-              
+
               if (s.activeMinigame.status === "ELIMINATED") {
                 s.player.reputation = Math.max(0, s.player.reputation - 15);
-                s.player.addIdolScore(s.currentTeam.id, -10, s.currentTeam.power); 
+                s.player.addIdolScore(s.currentTeam.id, -10, s.currentTeam.power);
                 s.player.attributes.applyDelta({ definicion: -2, mentalidad: -3 });
               } else if (s.activeMinigame.status === "WON") {
                 s.player.reputation = Math.min(100, s.player.reputation + 25);
-                s.player.addIdolScore(s.currentTeam.id, 50, s.currentTeam.power); 
+                s.player.addIdolScore(s.currentTeam.id, 50, s.currentTeam.power);
                 s.player.attributes.applyDelta({ definicion: 2, mentalidad: 3 });
               }
             }
           });
         } else {
-          this.deps.cupManager.resolvePenaltyKick(dir);
+          this.cupManager.resolvePenaltyKick(dir);
         }
       };
     });
@@ -352,21 +361,21 @@ export class MinigameView {
     // Free Kick clicks
     const freekickBtns = this.container.querySelectorAll(".btn-freekick");
     freekickBtns.forEach(btn => {
-      btn.onclick = (e) => {
-        const dir = e.currentTarget.getAttribute("data-dir");
+      btn.onclick = () => {
+        const dir = btn.getAttribute("data-dir");
         this.stateManager.mutate((s) => {
-          if(s.activeMinigame && s.activeMinigame.type === "free_kick") {
-             // Llama al método resolveKick que actualiza el estado directamente dentro del minijuego
-             s.activeMinigame.resolveKick(dir);
-             
-             // Castigo / Recompensa básica narrativa
-             if (s.activeMinigame.status === "ELIMINATED") {
-                s.player.reputation = Math.max(0, s.player.reputation - 5);
-                s.player.addIdolScore(s.currentTeam.id, -5, s.currentTeam.power); 
-             } else if (s.activeMinigame.status === "WON") {
-                s.player.reputation = Math.min(100, s.player.reputation + 15);
-                s.player.addIdolScore(s.currentTeam.id, 20, s.currentTeam.power); 
-             }
+          if (s.activeMinigame && s.activeMinigame.type === "free_kick") {
+            // Llama al método resolveKick que actualiza el estado directamente dentro del minijuego
+            s.activeMinigame.resolveKick(dir);
+
+            // Castigo / Recompensa básica narrativa
+            if (s.activeMinigame.status === "ELIMINATED") {
+              s.player.reputation = Math.max(0, s.player.reputation - 5);
+              s.player.addIdolScore(s.currentTeam.id, -5, s.currentTeam.power);
+            } else if (s.activeMinigame.status === "WON") {
+              s.player.reputation = Math.min(100, s.player.reputation + 15);
+              s.player.addIdolScore(s.currentTeam.id, 20, s.currentTeam.power);
+            }
           }
         });
       };
@@ -386,7 +395,7 @@ export class MinigameView {
           });
         } else {
           if (this.seasonSimulator) {
-            this.deps.seasonSimulator.finishCurrentSeason();
+            this.seasonSimulator.finishCurrentSeason();
           } else {
             this.stateManager.mutate(st => {
               st.seasonPhase = "SEASON_END";
@@ -400,44 +409,44 @@ export class MinigameView {
     const btnGoPen = this.container.querySelector("#btn-go-penalties");
     if (btnGoPen) {
       btnGoPen.onclick = () => {
-         this.stateManager.mutate(s => {
-             if(s.activeMinigame) s.activeMinigame.status = "PENALTIES";
-         });
+        this.stateManager.mutate(s => {
+          if (s.activeMinigame) s.activeMinigame.status = "PENALTIES";
+        });
       };
     }
 
     const btnPenCont = this.container.querySelector("#btn-penalties-continue");
     if (btnPenCont) {
       btnPenCont.onclick = () => {
-         this.stateManager.mutate(s => {
-             if(s.activeMinigame.status === "WON" || s.activeMinigame.status === "ELIMINATED" || s.activeMinigame.status === "PLAYING") {
-               if(s.activeMinigame.penaltyShootout) {
-                 s.activeMinigame.penaltyShootout = null;
-               }
-             }
-         });
+        this.stateManager.mutate(s => {
+          if (s.activeMinigame.status === "WON" || s.activeMinigame.status === "ELIMINATED" || s.activeMinigame.status === "PLAYING") {
+            if (s.activeMinigame.penaltyShootout) {
+              s.activeMinigame.penaltyShootout = null;
+            }
+          }
+        });
       };
     }
 
     const btnNarCont = this.container.querySelector("#btn-narrative-continue");
     if (btnNarCont) {
       btnNarCont.onclick = () => {
-         this.stateManager.mutate(s => {
-            s.activeMinigame = null;
-            if (s.activeMidseasonEvent) {
-              s.midseasonEventResults.push({ event: s.activeMidseasonEvent, optionIndex: 0, option: s.activeMidseasonEvent.options[0] });
-            }
-            s.midseasonEventIndex += 1;
-            if (s.midseasonEventIndex < s.midseasonEvents.length) {
-              s.activeMidseasonEvent = s.midseasonEvents[s.midseasonEventIndex];
-              s.seasonPhase = "MIDSEASON_EVENT";
-              s.screen = "MIDSEASON";
-            } else {
-              s.activeMidseasonEvent = null;
-              s.seasonPhase = "SEASON_END";
-              s.screen = "DASHBOARD";
-            }
-         });
+        this.stateManager.mutate(s => {
+          s.activeMinigame = null;
+          if (s.activeMidseasonEvent) {
+            s.midseasonEventResults.push({ event: s.activeMidseasonEvent, optionIndex: 0, option: s.activeMidseasonEvent.options[0] });
+          }
+          s.midseasonEventIndex += 1;
+          if (s.midseasonEventIndex < s.midseasonEvents.length) {
+            s.activeMidseasonEvent = s.midseasonEvents[s.midseasonEventIndex];
+            s.seasonPhase = "MIDSEASON_EVENT";
+            s.screen = "MIDSEASON";
+          } else {
+            s.activeMidseasonEvent = null;
+            s.seasonPhase = "SEASON_END";
+            s.screen = "DASHBOARD";
+          }
+        });
       };
     }
   }

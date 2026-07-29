@@ -16,7 +16,7 @@ export class MidseasonView extends View {
     // Dots de progreso
     const dotsHTML = totalEvents > 1
       ? `<div style="display:flex; gap:6px; justify-content:center; margin-bottom:12px;">
-          ${Array.from({length: totalEvents}, (_, i) => `
+          ${Array.from({ length: totalEvents }, (_, i) => `
             <div style="width:10px; height:10px; border-radius:50%; background: ${i < currentIdx ? 'var(--accent-green)' : i === currentIdx ? 'var(--accent-gold)' : 'rgba(255,255,255,0.2)'};"></div>
           `).join('')}
         </div>`
@@ -50,7 +50,7 @@ export class MidseasonView extends View {
   }
 
   bindEvents() {
-// Saltear pretemporada (sin cartas disponibles)
+    // Saltear pretemporada (sin cartas disponibles)
     const btnSkipTraining = document.getElementById("btn-skip-training");
     if (btnSkipTraining) {
       btnSkipTraining.onclick = () => {
@@ -60,7 +60,7 @@ export class MidseasonView extends View {
         this.deps.gameManager.midseasonEventIndex = 0;
         this.deps.gameManager.midseasonEventResults = [];
         this.deps.gameManager.activeMidseasonEvent = this.deps.gameManager.midseasonEvents[0] ?? null;
-        this.deps.stateManager.update({screen: "MIDSEASON"});
+        this.deps.stateManager.update({ screen: "MIDSEASON" });
         this.deps.appRouter.render();
       };
     }
@@ -68,16 +68,16 @@ export class MidseasonView extends View {
     // Evento de Mitad de Temporada -> puede haber varios consecutivos
     const eventBtns = document.querySelectorAll(".btn-event-option");
     eventBtns.forEach(btn => {
-      btn.onclick = (e) => {
-        const idx = Number(e.currentTarget.getAttribute("data-opt-index"));
+      btn.onclick = () => {
+        const idx = Number(btn.getAttribute("data-opt-index"));
         this.deps.gameManager.resolveMidseasonEvent(idx);
 
         if (this.deps.stateManager.getState().seasonPhase === "NARRATIVE_MINIGAME") {
-          this.deps.stateManager.update({screen: "NARRATIVE_MINIGAME"});
+          this.deps.stateManager.update({ screen: "NARRATIVE_MINIGAME" });
         } else if ((this.deps.stateManager.getState().activeMidseasonEvent !== null)) {
-          this.deps.stateManager.update({screen: "MIDSEASON"});
+          this.deps.stateManager.update({ screen: "MIDSEASON" });
         } else if (this.deps.stateManager.getState().seasonPhase === "CUP_NATIONAL" || this.deps.stateManager.getState().seasonPhase === "CUP_INTERNATIONAL") {
-          this.deps.stateManager.update({screen: "CUP_MATCH"});
+          this.deps.stateManager.update({ screen: "CUP_MATCH" });
         } else {
           this.deps.seasonSimulator.finishCurrentSeason();
         }
@@ -89,13 +89,13 @@ export class MidseasonView extends View {
     if (btnContinueSeason) {
       btnContinueSeason.onclick = () => {
         this.deps.gameManager.resolveMidseasonEvent(-1);
-        
+
         if (this.deps.stateManager.getState().seasonPhase === "NARRATIVE_MINIGAME") {
-          this.deps.stateManager.update({screen: "NARRATIVE_MINIGAME"});
+          this.deps.stateManager.update({ screen: "NARRATIVE_MINIGAME" });
         } else if ((this.deps.stateManager.getState().activeMidseasonEvent !== null)) {
-          this.deps.stateManager.update({screen: "MIDSEASON"});
+          this.deps.stateManager.update({ screen: "MIDSEASON" });
         } else if (this.deps.stateManager.getState().seasonPhase === "CUP_NATIONAL" || this.deps.stateManager.getState().seasonPhase === "CUP_INTERNATIONAL") {
-          this.deps.stateManager.update({screen: "CUP_MATCH"});
+          this.deps.stateManager.update({ screen: "CUP_MATCH" });
         } else {
           this.deps.seasonSimulator.finishCurrentSeason();
         }
@@ -106,8 +106,8 @@ export class MidseasonView extends View {
     // Minijuegos Narrativos (Penales)
     const narrativePenaltyBtns = document.querySelectorAll(".btn-narrative-penalty");
     narrativePenaltyBtns.forEach(btn => {
-      btn.onclick = (e) => {
-        const dir = e.currentTarget.getAttribute("data-dir");
+      btn.onclick = () => {
+        const dir = btn.getAttribute("data-dir");
         this.deps.gameManager.resolveNarrativePenaltyKick(dir);
         this.deps.appRouter.render();
       };
@@ -118,9 +118,9 @@ export class MidseasonView extends View {
       btnContinueNarrative.onclick = () => {
         this.deps.gameManager.continueFromNarrativeMinigame();
         if ((this.deps.stateManager.getState().activeMidseasonEvent !== null)) {
-          this.deps.stateManager.update({screen: "MIDSEASON"});
+          this.deps.stateManager.update({ screen: "MIDSEASON" });
         } else if (this.deps.stateManager.getState().seasonPhase === "CUP_NATIONAL" || this.deps.stateManager.getState().seasonPhase === "CUP_INTERNATIONAL") {
-          this.deps.stateManager.update({screen: "CUP_MATCH"});
+          this.deps.stateManager.update({ screen: "CUP_MATCH" });
         } else {
           this.deps.seasonSimulator.finishCurrentSeason();
         }
@@ -131,8 +131,8 @@ export class MidseasonView extends View {
     // Minijuego de Copa: Matriz
     const matrixBtns = document.querySelectorAll(".btn-matrix-cell");
     matrixBtns.forEach(btn => {
-      btn.onclick = (e) => {
-        const idx = Number(e.currentTarget.getAttribute("data-cell-index"));
+      btn.onclick = () => {
+        const idx = Number(btn.getAttribute("data-cell-index"));
         this.deps.cupManager.resolveCupMatrixClick(idx);
         this.deps.appRouter.render();
       };
@@ -141,8 +141,8 @@ export class MidseasonView extends View {
     // Minijuego de Copa: Penales
     const penaltyBtns = document.querySelectorAll(".btn-penalty-dir");
     penaltyBtns.forEach(btn => {
-      btn.onclick = (e) => {
-        const dir = e.currentTarget.getAttribute("data-dir");
+      btn.onclick = () => {
+        const dir = btn.getAttribute("data-dir");
         this.deps.cupManager.resolvePenaltyKick(dir);
         this.deps.appRouter.render();
       };
@@ -155,7 +155,7 @@ export class MidseasonView extends View {
       btnContinueCup.onclick = () => {
         this.deps.gameManager.continueFromCup();
         if (this.deps.stateManager.getState().seasonPhase === "CUP_NATIONAL" || this.deps.stateManager.getState().seasonPhase === "CUP_INTERNATIONAL") {
-          this.deps.stateManager.update({screen: "CUP_MATCH"});
+          this.deps.stateManager.update({ screen: "CUP_MATCH" });
         } else {
           this.deps.seasonSimulator.finishCurrentSeason();
         }

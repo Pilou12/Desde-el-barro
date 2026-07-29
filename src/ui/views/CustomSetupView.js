@@ -111,12 +111,12 @@ export class CustomSetupView extends View {
   }
 
   bindEvents() {
-// Custom Setup - Clic en Nodos de Cancha Táctica
+    // Custom Setup - Clic en Nodos de Cancha Táctica
     const pitchNodes = document.querySelectorAll(".pitch-node");
     pitchNodes.forEach(node => {
-      node.onclick = (e) => {
-        const key = e.currentTarget.getAttribute("data-pos-key");
-        this.deps.stateManager.update({selectedPositionKey: key});
+      node.onclick = () => {
+        const key = node.getAttribute("data-pos-key");
+        this.deps.stateManager.update({ selectedPositionKey: key });
         this.deps.appRouter.render();
       };
     });
@@ -124,10 +124,10 @@ export class CustomSetupView extends View {
     // Custom Setup - Cambiar pestañas de división
     const tabBtns = document.querySelectorAll(".tab-btn");
     tabBtns.forEach(btn => {
-      btn.onclick = (e) => {
-        const tab = e.currentTarget.getAttribute("data-tab");
-        this.deps.stateManager.update({selectedDivisionTab: tab});
-        
+      btn.onclick = () => {
+        const tab = btn.getAttribute("data-tab");
+        this.deps.stateManager.update({ selectedDivisionTab: tab });
+
         const tabMap = {
           primera: ARGENTINE_LEAGUES.primera,
           b_nacional: ARGENTINE_LEAGUES.b_nacional,
@@ -136,7 +136,7 @@ export class CustomSetupView extends View {
         };
         const league = tabMap[tab] || ARGENTINE_LEAGUES.primera;
         if (league.teams.length) {
-          this.deps.stateManager.update({selectedCustomTeamId: league.teams[0].id});
+          this.deps.stateManager.update({ selectedCustomTeamId: league.teams[0].id });
         }
 
         this.deps.appRouter.render();
@@ -146,9 +146,9 @@ export class CustomSetupView extends View {
     // Custom Setup - Selección visual de club
     const clubCards = document.querySelectorAll(".club-card-select");
     clubCards.forEach(card => {
-      card.onclick = (e) => {
-        const teamId = e.currentTarget.getAttribute("data-team-id");
-        this.deps.stateManager.update({selectedCustomTeamId: teamId});
+      card.onclick = () => {
+        const teamId = card.getAttribute("data-team-id");
+        this.deps.stateManager.update({ selectedCustomTeamId: teamId });
         this.deps.appRouter.render();
       };
     });
@@ -161,7 +161,7 @@ export class CustomSetupView extends View {
         const customTeamId = this.state.selectedCustomTeamId || "river";
 
         this.deps.gameManager.startNewCareer({ playerName: name, positionKey, mode: "custom_start", customTeamId });
-        this.deps.stateManager.update({screen: "DASHBOARD"});
+        this.deps.stateManager.update({ screen: "DASHBOARD" });
         this.deps.appRouter.render();
       };
     }
@@ -169,7 +169,7 @@ export class CustomSetupView extends View {
     const btnBackMenu = document.getElementById("btn-back-menu");
     if (btnBackMenu) {
       btnBackMenu.onclick = () => {
-        this.deps.stateManager.update({screen: "START_MENU"});
+        this.deps.stateManager.update({ screen: "START_MENU" });
         this.deps.appRouter.render();
       };
     }

@@ -1,0 +1,21 @@
+arreglar q los penales no muestra a donde no patear cuando el jugador tiene definición
+
+arreglar el evento de patrocinio de mierda de los botines
+
+arreglar el evento de jugar en un club anterior si el jugador no jugo en otro club no tiene q aparecer
+
+terminar lo que quedo en el chat de Claude
+
+(arreglar cupos a las copas y hacer que tengan fase de grupo suda y libertadores)
+
+agregar el mundial y copa america
+
+agregar estadísticas de equipo, y que estas aumenten o disminuyan según el resultado del final de temporada
+
+hacer mas detallado la explicación de cada estadistica
+
+terminar de pulir mas el uso de las estadísticas
+
+agregar mas eventos y que usen las estadísticas
+
+agregar mas cartas de entrenamiento

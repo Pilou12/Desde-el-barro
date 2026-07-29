@@ -22,7 +22,7 @@ export class GameManager {
   startNewCareer({ playerName = "El Pibe", positionKey = "delantero", mode = "random", customTeamId = null }) {
     const leagueManager = new LeagueManager(ARGENTINE_LEAGUES, INTERNATIONAL_LEAGUES);
     const player = new Player({ name: playerName, positionKey, initialAge: 16 });
-    
+
     // Por defecto, en el primer año todos juegan Copa Argentina
     player.qualifiedCups = ["copa_argentina"];
 
@@ -87,16 +87,16 @@ export class GameManager {
   }
 
   _startMidseasonPhase(state) {
-      state.seasonPhase = "MIDSEASON_EVENT";
-      state.midseasonEvents = this.eventManager.getSeasonEventsForPlayer(state.player, state.currentTeam);
-      state.midseasonEventIndex = 0;
-      state.midseasonEventResults = [];
-      if (state.midseasonEvents.length > 0) {
-        state.activeMidseasonEvent = state.midseasonEvents[0];
-      } else {
-        state.activeMidseasonEvent = null;
-        this._transitionToNextCupOrEnd(state);
-      }
+    state.seasonPhase = "MIDSEASON_EVENT";
+    state.midseasonEvents = this.eventManager.getSeasonEventsForPlayer(state.player, state.currentTeam);
+    state.midseasonEventIndex = 0;
+    state.midseasonEventResults = [];
+    if (state.midseasonEvents.length > 0) {
+      state.activeMidseasonEvent = state.midseasonEvents[0];
+    } else {
+      state.activeMidseasonEvent = null;
+      this._transitionToNextCupOrEnd(state);
+    }
   }
 
   resolveMidseasonEvent(optionIndex) {
@@ -114,11 +114,16 @@ export class GameManager {
       }
 
       const resolvedOption = { ...option };
-      if (option.triggerMinigame) {
+      const needsMinigame = option.triggerMinigame || option.action === "TAKE_FREEKICK" || option.action === "TAKE_PENALTY";
+      if (needsMinigame) {
         state.seasonPhase = "NARRATIVE_MINIGAME";
-        state.activeMinigame = MinigameEngine.generateNarrativePenaltyShootout(
-          state.player.position.getPrimaryStatValue(state.player.attributes)
-        );
+        const playerStat = state.player.position.getPrimaryStatValue(state.player.attributes);
+        if (option.action === "TAKE_FREEKICK") {
+          state.activeMinigame = MinigameEngine.generateFreeKick(playerStat, true);
+        } else {
+          // TAKE_PENALTY o triggerMinigame genérico → penal
+          state.activeMinigame = MinigameEngine.generatePenaltyShootout(playerStat, true);
+        }
       }
 
       state.midseasonEventResults.push({
@@ -127,7 +132,7 @@ export class GameManager {
         option: resolvedOption
       });
 
-      if (!option.triggerMinigame) {
+      if (!needsMinigame) {
         this._continueFromMidseasonEvent(state);
       }
     });

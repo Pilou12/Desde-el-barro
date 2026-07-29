@@ -8,14 +8,14 @@ export class StoreView extends View {
   getTemplate() {
     const player = this.state.player;
     const items = STORE_ITEMS;
-    
+
     const lujos = items.filter(i => i.category === "lujo");
     const mejoras = items.filter(i => i.category === "mejora");
 
     const renderItemCard = (item) => {
       const isPurchased = player.hasItem(item.id);
       const canAfford = player.bankBalance >= item.price;
-      
+
       return `
         <div class="glass-card" style="padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 16px; opacity: ${isPurchased ? '0.6' : '1'}; border-left: 4px solid ${item.category === 'mejora' ? 'var(--accent-blue)' : 'var(--accent-gold)'};">
           <div style="font-size: 2.2rem; min-width: 40px; text-align: center;">${item.icon}</div>
@@ -80,10 +80,10 @@ export class StoreView extends View {
   }
 
   bindEvents() {
-const btnBuyStore = document.querySelectorAll(".btn-buy-store");
+    const btnBuyStore = document.querySelectorAll(".btn-buy-store");
     btnBuyStore.forEach(btn => {
-      btn.onclick = (e) => {
-        const itemId = e.currentTarget.getAttribute("data-item-id");
+      btn.onclick = () => {
+        const itemId = btn.getAttribute("data-item-id");
         const item = getStoreItemById(itemId);
         if (item) {
           if (this.deps.economyManager.buyStoreItem(item)) {
@@ -98,7 +98,7 @@ const btnBuyStore = document.querySelectorAll(".btn-buy-store");
     const btnBackStore = document.getElementById("btn-back-store");
     if (btnBackStore) {
       btnBackStore.onclick = () => {
-        this.deps.stateManager.update({screen: "DASHBOARD"});
+        this.deps.stateManager.update({ screen: "DASHBOARD" });
         this.deps.appRouter.render();
       };
     }

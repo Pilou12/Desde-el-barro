@@ -1,5 +1,0 @@
-Mejorar la interfaz en general
-
-
-
-Y creo q Masomenos estaría el esqueleto, quedaría agregar más eventos más ligas con sus respectivos clubes y agregar la selección, mundial y esas cosas
