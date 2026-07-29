@@ -210,13 +210,45 @@ export class MinigameView {
     `;
 
     if (shootout.status === "PLAYING") {
+      const currentKick = shootout.kicks[shootout.currentKick];
+      let hintMsg = "";
+      
+      const formatDirection = (dir) => {
+        const map = {
+          "LEFT": "la izquierda",
+          "CENTER": "el centro",
+          "RIGHT": "la derecha"
+        };
+        return map[dir] || dir;
+      };
+
+      if (currentKick && currentKick.hasHint && currentKick.wrongDirectionHint) {
+        let dirTrans = formatDirection(currentKick.wrongDirectionHint);
+        hintMsg = `
+          <div style="background: rgba(255,0,0,0.2); border: 1px solid #ff4d4d; border-radius: 8px; padding: 10px; margin-bottom: 15px; text-align: center; color: white;">
+            <strong>👁️ ¡OJO!</strong> El arquero se la va a jugar hacia <strong>${dirTrans}</strong>. ¡No patees ahí!
+          </div>
+        `;
+      }
+
       html += `
-        <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 30px;">
-          <button class="btn btn-secondary btn-penalty" data-dir="LEFT">◀ Izquierda</button>
-          <button class="btn btn-secondary btn-penalty" data-dir="CENTER">▲ Medio</button>
-          <button class="btn btn-secondary btn-penalty" data-dir="RIGHT">Derecha ▶</button>
+        ${hintMsg}
+        <div style="position: relative; width: 100%; max-width: 500px; aspect-ratio: 2/1; margin: 0 auto 30px auto; border: 4px solid white; border-bottom: none; background: rgba(255,255,255,0.1); border-radius: 10px 10px 0 0; display: flex;">
+          <!-- Zonas del Arco -->
+          <button class="btn btn-secondary btn-penalty" data-dir="LEFT" style="flex: 1; margin: 10px; border-radius: 8px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 2px solid transparent; transition: all 0.3s; cursor: pointer; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">◀ Izquierda</button>
+          
+          <button class="btn btn-secondary btn-penalty" data-dir="CENTER" style="flex: 1; margin: 10px 0; border-radius: 8px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 2px solid transparent; transition: all 0.3s; cursor: pointer; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">▲ Medio</button>
+          
+          <button class="btn btn-secondary btn-penalty" data-dir="RIGHT" style="flex: 1; margin: 10px; border-radius: 8px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 2px solid transparent; transition: all 0.3s; cursor: pointer; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">Derecha ▶</button>
         </div>
-        <p style="color: #aaa; font-size: 0.9rem;">Elegí a dónde patear.</p>
+        <p style="color: #aaa; font-size: 0.9rem;">Elegí hacia dónde patear.</p>
+        <style>
+          .btn-penalty:hover {
+             background: rgba(255, 255, 255, 0.2) !important;
+             border-color: white !important;
+             transform: scale(1.05);
+          }
+        </style>
       `;
     } else {
       if (shootout.status === "WON") {

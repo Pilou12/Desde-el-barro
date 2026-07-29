@@ -10,7 +10,7 @@ export class PenaltyShootoutMinigame extends BaseMinigame {
     super("penalty_shootout", isNarrative);
     this.directions = ["LEFT", "CENTER", "RIGHT"];
     this.kicks = [];
-    
+
     for (let i = 0; i < 3; i++) {
       const correctDirection = this.directions[Math.floor(Math.random() * this.directions.length)];
       this.kicks.push({
@@ -23,11 +23,8 @@ export class PenaltyShootoutMinigame extends BaseMinigame {
     }
 
     // Pistas según stat principal
-    if (playerStat >= 95) {
-      this.kicks[0].hasHint = true;
-      this.kicks[1].hasHint = true;
-    } else if (playerStat >= 85) {
-      this.kicks[0].hasHint = true;
+    if (playerStat >= 85) {
+      this.kicks.forEach(k => k.hasHint = true);
     }
 
     // Calcular pista (qué dirección descartar)
@@ -50,7 +47,7 @@ export class PenaltyShootoutMinigame extends BaseMinigame {
    */
   resolveKick(direction) {
     if (this.status !== "PLAYING") return;
-    
+
     const currentKick = this.kicks[this.currentKick];
     currentKick.playerDirection = direction;
 
