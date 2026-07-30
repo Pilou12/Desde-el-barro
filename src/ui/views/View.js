@@ -1,4 +1,5 @@
 import { PositionFactory } from '../../domain/positions/PositionStrategy.js';
+import { NATIONALITIES } from '../../domain/Player.js';
 
 export class View {
   constructor(container, deps = {}) {
@@ -79,6 +80,9 @@ export class View {
     const league = this.state.currentLeague;
     const ovr = player.calculateOVR();
 
+    const natConfig = NATIONALITIES[player.nationality] || NATIONALITIES["AR"];
+    const flagUrl = natConfig.flagUrl;
+
     return `
       <div class="player-hero-card">
         <div class="player-identity">
@@ -93,7 +97,9 @@ export class View {
           </div>
           <div>
             <span style="color: var(--accent-green); font-weight: 800; text-transform: uppercase; font-size: 0.75rem;">Año ${this.state.currentYear} • ${player.age} Años</span>
-            <h2 style="font-family: var(--font-heading); font-size: 1.8rem; margin-top: 2px;">${player.name}</h2>
+            <h2 style="font-family: var(--font-heading); font-size: 1.8rem; margin-top: 2px;">
+              ${player.name} <img src="${flagUrl}" title="${natConfig.name}" style="width: 28px; height: 21px; vertical-align: baseline; border-radius: 3px; margin-left: 4px; border: 1px solid rgba(255,255,255,0.2);">
+            </h2>
             <p style="color: var(--text-secondary); font-size: 0.88rem;">${player.position.label} en <strong>${team.name}</strong> (${league.name})</p>
           </div>
         </div>
@@ -306,6 +312,7 @@ export class View {
             </div>
             <div style="display: flex; gap: 16px; flex-wrap: wrap;">
               ${renderCupWinner("🇦🇷 Copa Argentina", record.cupWinners["copa_argentina"])}
+              ${renderCupWinner("🏆🌎 Copa América", record.cupWinners["copa_america"])}
             </div>
           </div>
 

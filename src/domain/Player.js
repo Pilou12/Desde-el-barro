@@ -1,14 +1,26 @@
 import { Attributes } from "./Attributes.js";
 import { PositionFactory } from "./positions/PositionStrategy.js";
 
+export const NATIONALITIES = {
+  AR: { name: "Argentina", flagUrl: "https://flagcdn.com/w40/ar.png" },
+  BR: { name: "Brasil", flagUrl: "https://flagcdn.com/w40/br.png" },
+  UY: { name: "Uruguay", flagUrl: "https://flagcdn.com/w40/uy.png" },
+  CL: { name: "Chile", flagUrl: "https://flagcdn.com/w40/cl.png" },
+  CO: { name: "Colombia", flagUrl: "https://flagcdn.com/w40/co.png" },
+  PY: { name: "Paraguay", flagUrl: "https://flagcdn.com/w40/py.png" },
+  ES: { name: "España", flagUrl: "https://flagcdn.com/w40/es.png" },
+  IT: { name: "Italia", flagUrl: "https://flagcdn.com/w40/it.png" },
+};
+
 /**
  * Clase Player (POO)
  * Representa al futbolista protagonista, sus atributos, posición, contrato,
  * historial de estadísticas y métricas de reputación e ídolo.
  */
 export class Player {
-  constructor({ name, positionKey = "delantero", initialAge = 16 }) {
+  constructor({ name, positionKey = "delantero", initialAge = 16, nationality = "AR" }) {
     this.name = name;
+    this.nationality = nationality;
     this.position = PositionFactory.create(positionKey);
     this.age = initialAge;
     

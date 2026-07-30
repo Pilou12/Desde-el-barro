@@ -8,6 +8,7 @@ import { SeasonSummaryView } from "./views/SeasonSummaryView.js";
 import { TransferMarketView } from "./views/TransferMarketView.js";
 import { StoreView } from "./views/StoreView.js";
 import { RetirementView } from "./views/RetirementView.js";
+import { DebugMenuView } from "./views/DebugMenuView.js";
 
 /**
  * AppRouter
@@ -119,13 +120,10 @@ export class AppRouter {
         break;
       case "CUP_MATCH":
       case "NARRATIVE_MINIGAME":
-        activeView = new MinigameView(
-          mainContent,
-          this.stateManager,
-          this.eventBus,
-          this.cupManager,
-          this.seasonSimulator
-        );
+        activeView = new MinigameView(mainContent, this.viewDeps);
+        break;
+      case "DEBUG_MENU":
+        activeView = new DebugMenuView(mainContent, this.viewDeps);
         break;
       default:
         activeView = new StartMenuView(mainContent, this.viewDeps);

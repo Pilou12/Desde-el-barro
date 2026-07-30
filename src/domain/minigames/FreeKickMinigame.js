@@ -3,10 +3,10 @@ import { BaseMinigame } from "./BaseMinigame.js";
 export class FreeKickMinigame extends BaseMinigame {
   /**
    * Genera el minijuego de Tiro Libre.
-   * @param {number} playerStat - Estadística del jugador (ej. Definición) para calcular pistas.
+   * @param {Object} config - Configuración genérica del minijuego.
    * @param {boolean} isNarrative - Indica si pertenece a un evento narrativo.
    */
-  constructor(playerStat, isNarrative = true) {
+  constructor(config, isNarrative = true) {
     super("free_kick", isNarrative);
     this.points = ["TOP_LEFT", "BOTTOM_LEFT", "CENTER", "TOP_RIGHT", "BOTTOM_RIGHT"];
     
@@ -24,9 +24,9 @@ export class FreeKickMinigame extends BaseMinigame {
     const randomIndex = Math.floor(Math.random() * this.validPairs.length);
     this.coveredPoints = this.validPairs[randomIndex];
     
-    // Pistas según stat (Ej: si stat > 85, te avisa un punto que seguro va a tapar)
+    // Pistas (Ej: te avisa un punto que seguro va a tapar)
     this.hintPoint = null;
-    if (playerStat >= 85) {
+    if (config.hasHint) {
       // Revela uno de los dos puntos que va a tapar
       this.hintPoint = this.coveredPoints[Math.floor(Math.random() * this.coveredPoints.length)];
     }

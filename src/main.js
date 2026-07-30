@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const economyManager = new EconomyManager(stateManager);
     const marketManager = new MarketManager();
     const seasonSimulator = new SeasonSimulator(stateManager, cupManager, marketManager);
+    gameManager.setSeasonSimulator(seasonSimulator);
 
     // 3. Inicializar Router de UI
     const router = new AppRouter(appContainer, gameManager, stateManager, eventBus, cupManager, seasonSimulator, economyManager);

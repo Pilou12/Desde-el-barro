@@ -24,8 +24,8 @@ export const CUPS_CATALOG = [
         description: "La copa nacional abierta a todos los clubes argentinos de las 4 divisiones. El campeón clasifica a la Copa Libertadores.",
         matrixConfig: {
             gridSize: 64,   // 8x8
-            requiredWins: 6,
-            maxDraws: 4,
+            hasGroupStage: false,
+            knockoutWins: 6,
         },
         qualifyRules: {
             // Todos los equipos argentinos (tier 1-4) clasifican siempre
@@ -45,8 +45,8 @@ export const CUPS_CATALOG = [
         description: "El torneo más importante de Sudamérica. Argentina manda 7 equipos: top 4 de LPF, campeón de Copa Argentina, y ganadores de Sudamericana/Recopa si aplica.",
         matrixConfig: {
             gridSize: 64,
-            requiredWins: 7,
-            maxDraws: 3,
+            hasGroupStage: true,
+            knockoutWins: 4, // Octavos a Final
         },
         qualifyRules: {
             // Top 4 de Primera División Argentina (tier 1)
@@ -69,8 +69,8 @@ export const CUPS_CATALOG = [
         description: "La segunda copa continental. Posiciones 5-10 de Primera División Argentina clasifican.",
         matrixConfig: {
             gridSize: 64,
-            requiredWins: 7,
-            maxDraws: 3,
+            hasGroupStage: true,
+            knockoutWins: 4, // Octavos a Final
         },
         qualifyRules: {
             leagueTier: 1,
@@ -90,12 +90,31 @@ export const CUPS_CATALOG = [
         description: "El campeón de Libertadores vs el campeón de Sudamericana. Solo ida y vuelta.",
         matrixConfig: {
             gridSize: 64,
-            requiredWins: 2,  // Ida y vuelta simplificado
-            maxDraws: 2,
+            hasGroupStage: false,
+            knockoutWins: 1,  // Final única
         },
         qualifyRules: {
             // Solo si ganaste Libertadores o Sudamericana el año anterior
             orCupWinner: "libertadores",
+        },
+        winnerRewards: {
+            qualifiesFor: null,
+        },
+    },
+
+    {
+        id: "copa_america",
+        name: "Copa América",
+        emoji: "🏆🌎",
+        country: "intl",
+        description: "Torneo internacional de selecciones sudamericanas e invitadas. Se juega cada 4 años.",
+        matrixConfig: {
+            gridSize: 64,
+            hasGroupStage: true,
+            knockoutWins: 3, // Cuartos, Semis, Final
+        },
+        qualifyRules: {
+            isNationalTeam: true,
         },
         winnerRewards: {
             qualifiesFor: null,
@@ -117,13 +136,13 @@ export function getCupById(cupId) {
  * Helper: obtener la config de matriz para una copa dada
  * (para que MatrixMinigame la consuma directamente)
  * @param {string} cupId
- * @returns {{ gridSize, requiredWins, maxDraws }}
+ * @returns {{ gridSize, hasGroupStage, knockoutWins }}
  */
 export function getCupMatrixConfig(cupId) {
     const cup = getCupById(cupId);
     if (!cup) {
         // Fallback genérico si no existe la copa
-        return { gridSize: 64, requiredWins: 6, maxDraws: 4 };
+        return { gridSize: 64, hasGroupStage: false, knockoutWins: 6 };
     }
     return cup.matrixConfig;
 }
@@ -180,6 +199,6 @@ export function calculateQualifiedCups({ currentTeam, leagueRank, leagueTier, cu
     }
 
     // Copa Argentina siempre va primero, luego internacionales
-    const order = ["copa_argentina", "libertadores", "sudamericana", "recopa"];
+    const order = ["copa_argentina", "libertadores", "sudamericana", "recopa", "copa_america"];
     return order.filter(id => qualified.has(id));
 }

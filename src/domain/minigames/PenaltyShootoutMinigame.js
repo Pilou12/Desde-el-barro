@@ -2,29 +2,27 @@ import { BaseMinigame } from "./BaseMinigame.js";
 
 export class PenaltyShootoutMinigame extends BaseMinigame {
   /**
-   * Genera las tendencias del arquero para una tanda de penales (3 penales).
-   * @param {number} playerStat - Stat principal (Reflejos o Definición) para pistas.
+   * Genera las tendencias del arquero para una tanda de penales.
+   * @param {Object} config - Configuración genérica del minijuego.
    * @param {boolean} isNarrative - Si es parte de un evento narrativo.
    */
-  constructor(playerStat, isNarrative = false) {
+  constructor(config, isNarrative = false) {
     super("penalty_shootout", isNarrative);
     this.directions = ["LEFT", "CENTER", "RIGHT"];
     this.kicks = [];
+    
+    const totalKicks = config.totalKicks ?? 3;
+    const kicksWithHints = config.kicksWithHints ?? 0;
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < totalKicks; i++) {
       const correctDirection = this.directions[Math.floor(Math.random() * this.directions.length)];
       this.kicks.push({
         correctDirection,
-        hasHint: false,
+        hasHint: i < kicksWithHints, // Asignamos pistas a los primeros 'kicksWithHints' penales
         wrongDirectionHint: null,
         scored: null,
         playerDirection: null
       });
-    }
-
-    // Pistas según stat principal
-    if (playerStat >= 85) {
-      this.kicks.forEach(k => k.hasHint = true);
     }
 
     // Calcular pista (qué dirección descartar)
@@ -66,7 +64,7 @@ export class PenaltyShootoutMinigame extends BaseMinigame {
     // El juego asume muerte súbita para hacer la experiencia más intensa.
     if (!currentKick.scored) {
       this.status = "ELIMINATED";
-    } else if (this.currentKick >= 3) {
+    } else if (this.currentKick >= this.kicks.length) {
       this.status = "WON";
     }
   }

@@ -1,3 +1,5 @@
+import { CONMEBOL_TEAMS, INVITED_NATIONAL_TEAMS, getNationalTeamOVR } from "../data/leagues/nationalTeamsData.js";
+
 export class CupManager {
   constructor(stateManager) {
     this.stateManager = stateManager;
@@ -64,6 +66,28 @@ export class CupManager {
     }
   }
 
+  isPlayerCalledUpForNationalTeam(player) {
+    // Para la Copa América, el jugador debe tener un nivel suficiente
+    return player.calculateOVR() >= 75;
+  }
+
+  getNationalTeamsForCopaAmerica() {
+    // 10 equipos fijos de CONMEBOL
+    const conmebol = [...CONMEBOL_TEAMS];
+    
+    // 6 invitados al azar
+    const invitadosDisponibles = [...INVITED_NATIONAL_TEAMS];
+    const invitados = [];
+    for (let i = 0; i < 6; i++) {
+      if (invitadosDisponibles.length === 0) break;
+      const randIdx = Math.floor(Math.random() * invitadosDisponibles.length);
+      invitados.push(invitadosDisponibles[randIdx]);
+      invitadosDisponibles.splice(randIdx, 1);
+    }
+    
+    return [...conmebol, ...invitados];
+  }
+
   _simulateCupWinner(state, cupType, excludeTeams = []) {
     let candidateTeams = [];
     
@@ -79,6 +103,8 @@ export class CupManager {
       const argMid = state.leagueManager.getLeagueByCountryAndTier("ar", 1)?.teams.slice(6, 12) || [];
       const braMid = state.leagueManager.getLeagueByCountryAndTier("br", 1)?.teams.slice(6, 12) || [];
       candidateTeams = [...argMid, ...braMid];
+    } else if (cupType === "copa_america") {
+      candidateTeams = this.getNationalTeamsForCopaAmerica();
     } else {
       candidateTeams = state.leagueManager.getLeagueByCountryAndTier("ar", 1)?.teams.slice(0, 5) || [];
     }
@@ -86,11 +112,17 @@ export class CupManager {
     const availableTeams = candidateTeams.filter(t => !excludeTeams.includes(t.id));
     if (availableTeams.length === 0) return candidateTeams[0] || null;
 
-    const totalPower = availableTeams.reduce((sum, t) => sum + (t.power || 50), 0);
+    // Obtener poder (power o OVR para selecciones)
+    const getPower = (team) => {
+      if (cupType === "copa_america") return getNationalTeamOVR(team.id);
+      return team.power || 50;
+    };
+
+    const totalPower = availableTeams.reduce((sum, t) => sum + getPower(t), 0);
     let randomVal = Math.random() * totalPower;
     
     for (const team of availableTeams) {
-      randomVal -= (team.power || 50);
+      randomVal -= getPower(team);
       if (randomVal <= 0) {
         return team;
       }

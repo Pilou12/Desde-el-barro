@@ -42,10 +42,15 @@ export class SeasonSimulator {
       }
 
       state.cupWinners = state.cupWinners || {};
-      const cups = ["libertadores", "sudamericana", "copa_argentina"];
-      for (const cup of cups) {
+      const cupsToSimulate = ["libertadores", "sudamericana", "copa_argentina"];
+      if (state.currentYear % 4 === 0) {
+        cupsToSimulate.push("copa_america");
+      }
+      for (const cup of cupsToSimulate) {
         if (!state.cupWinners[cup]) {
           const excludes = Object.values(state.cupWinners).filter(t => t).map(t => t.id);
+          // REGLA DE ORO: El equipo del jugador nunca puede ganar por simulación, solo jugando.
+          excludes.push(state.currentTeam.id);
           state.cupWinners[cup] = this.cupManager._simulateCupWinner(state, cup, excludes);
         }
       }
@@ -95,6 +100,7 @@ export class SeasonSimulator {
         relegation: recordRelegation,
         promotionMessage,
         relegationMessage,
+        wasCalledUp: state.player.wasCalledUp,
         trainingCardName: state.selectedTrainingCard ? state.selectedTrainingCard.name : "Entrenamiento regular",
         eventResults: [...state.midseasonEventResults],
         cupResults: [...state.cupResults],
@@ -132,6 +138,18 @@ export class SeasonSimulator {
         country: state.currentTeam.country ?? "ar",
       });
 
+      const nextYear = state.currentYear + 1;
+      if (nextYear % 4 === 0) {
+        if (this.cupManager.isPlayerCalledUpForNationalTeam(state.player)) {
+          state.player.qualifiedCups.push("copa_america");
+          state.player.wasCalledUp = true;
+        } else {
+          state.player.wasCalledUp = false;
+        }
+      } else {
+        delete state.player.wasCalledUp;
+      }
+
       const avgWageByTier = { 1: 200000, 2: 20000, 3: 5000, 4: 1500 };
       if (state.currentTeam.wageBudget > (avgWageByTier[state.currentTeam.tier] ?? 5000)) {
         exposureGained += 4;
@@ -149,6 +167,9 @@ export class SeasonSimulator {
       const allLgs = state.leagueManager.getAllLeagues();
       state.currentTransferOffers = this.marketManager.generateOffersForPlayer(state.player, state.currentTeam, allLgs, 3);
       state.seasonPhase = "TRANSFER_MARKET";
+
+      // Limpiar registros de torneos para la próxima temporada
+      state.cupWinners = {};
 
       state.screen = state.player.isRetired ? "RETIREMENT" : "SEASON_SUMMARY";
     });

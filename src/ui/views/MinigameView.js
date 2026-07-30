@@ -1,12 +1,15 @@
 import { MinigameEngine } from "../../domain/MinigameEngine.js";
 
 export class MinigameView {
-  constructor(container, stateManager, eventBus, cupManager, seasonSimulator) {
+  constructor(container, deps) {
     this.container = container;
-    this.stateManager = stateManager;
-    this.eventBus = eventBus;
-    this.cupManager = cupManager;
-    this.seasonSimulator = seasonSimulator;
+    this.deps = deps;
+    
+    // Alias por conveniencia
+    this.stateManager = deps.stateManager;
+    this.eventBus = deps.eventBus;
+    this.cupManager = deps.cupManager;
+    this.seasonSimulator = deps.seasonSimulator;
 
     // Escuchar cambios de estado para re-renderizar en el mismo container
     // (ej: el jugador hace click en una celda y el estado cambia dentro de CUP_MATCH)
@@ -32,18 +35,22 @@ export class MinigameView {
 
     if (minigame.type === "matrix" && minigame.status !== "PENALTIES") {
       const grid = this.container.querySelector(".matrix-grid-container");
-      if (grid && minigame.status === "PLAYING") {
+      // Mantenemos la optimización de DOM solo si es EXACTAMENTE la misma instancia del minijuego
+      if (grid && minigame.status === "PLAYING" && this._currentMinigame === minigame) {
         this.updateMatrixDOM(minigame);
       } else {
         this.container.innerHTML = this.getMatrixHTML(minigame);
         this.bindEvents(state);
+        this._currentMinigame = minigame;
       }
     } else if (minigame.type === "free_kick") {
       this.container.innerHTML = this.getFreeKickHTML(minigame);
       this.bindEvents(state);
+      this._currentMinigame = minigame;
     } else if (minigame.type === "penalty_shootout" || (minigame.isNarrative && minigame.type !== "free_kick") || (minigame.type === "matrix" && minigame.status === "PENALTIES")) {
       this.container.innerHTML = this.getPenaltyHTML(minigame, state.screen);
       this.bindEvents(state);
+      this._currentMinigame = minigame;
     }
   }
 
@@ -78,6 +85,15 @@ export class MinigameView {
       cell.innerHTML = getCellContent(status);
     });
 
+    const progressEl = this.container.querySelector(".matrix-progress");
+    if (progressEl) {
+      if (minigame.currentPhase === "GROUP_STAGE") {
+        progressEl.innerHTML = `Fase de Grupos: <strong>Partido ${minigame.groupMatchesPlayed}/3</strong> - Puntos: <strong style="color:var(--accent-gold);">${minigame.groupPoints}</strong>`;
+      } else {
+        progressEl.innerHTML = `Rondas de Eliminación: <strong>${minigame.currentWins} / ${minigame.requiredWins}</strong> ganadas para ser Campeón`;
+      }
+    }
+
     const logsContainer = this.container.querySelector(".match-logs");
     if (logsContainer) {
       let logsHTML = "<h4>Relato de la Copa</h4>";
@@ -94,14 +110,25 @@ export class MinigameView {
       if (type === "libertadores") return "Copa Libertadores";
       if (type === "sudamericana") return "Copa Sudamericana";
       if (type === "recopa") return "Recopa";
+      if (type === "copa_america") return "Copa América";
       return "Copa";
     };
 
+    let progressHTML = "";
+    if (minigame.currentPhase === "GROUP_STAGE") {
+      progressHTML = `<p class="matrix-progress" style="color: var(--text-secondary);">Fase de Grupos: <strong>Partido ${minigame.groupMatchesPlayed}/3</strong> - Puntos: <strong style="color:var(--accent-gold);">${minigame.groupPoints}</strong></p>`;
+    } else {
+      progressHTML = `<p class="matrix-progress" style="color: var(--text-secondary);">Rondas de Eliminación: <strong>${minigame.currentWins} / ${minigame.requiredWins}</strong> ganadas para ser Campeón</p>`;
+    }
+
+    const debugBtnHTML = minigame.isDebug ? `<button id="btn-debug-return" class="btn btn-secondary" style="margin-bottom: 20px; width: 100%;">⬅ Volver al Menú de Debug</button>` : "";
+
     const headerHTML = `
       <div style="text-align: center; margin-bottom: 20px;">
+        ${debugBtnHTML}
         <span style="color: var(--accent-gold); font-weight: 800; font-size: 0.8rem; text-transform: uppercase;">Competición Oficial</span>
         <h2 style="font-family: var(--font-heading); font-size: 2rem; margin: 6px 0;">${formatCupName(minigame.cupType)}</h2>
-        <p style="color: var(--text-secondary);">Rondas ganadas: <strong>${minigame.currentWins} / ${minigame.requiredWins}</strong> para ser Campeón</p>
+        ${progressHTML}
         <div style="margin-top: 8px;">
           <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #fff;">
             DIFICULTAD: ${minigame.difficultyLabel}
@@ -194,9 +221,12 @@ export class MinigameView {
     const isNarrative = screen === "NARRATIVE_MINIGAME";
     const shootout = isNarrative ? minigame : minigame.penaltyShootout;
 
+    const debugBtnHTML = minigame.isDebug ? `<button id="btn-debug-return" class="btn btn-secondary" style="margin-bottom: 20px; width: 100%;">⬅ Volver al Menú de Debug</button>` : "";
+
     let html = `
       <div class="dashboard-layout" style="max-width: 800px; margin: 0 auto; grid-template-columns: 1fr;">
         <div class="panel glass-panel" style="text-align: center;">
+          ${debugBtnHTML}
           <h2 style="font-family: var(--font-heading); font-size: 2rem; color: var(--accent-gold); margin-bottom: 10px;">
             ${isNarrative ? "Momento Decisivo: PENAL" : "Definición por Penales"}
           </h2>
@@ -282,9 +312,12 @@ export class MinigameView {
   }
 
   getFreeKickHTML(minigame) {
+    const debugBtnHTML = minigame.isDebug ? `<button id="btn-debug-return" class="btn btn-secondary" style="margin-bottom: 20px; width: 100%;">⬅ Volver al Menú de Debug</button>` : "";
+
     let html = `
       <div class="dashboard-layout" style="max-width: 800px; margin: 0 auto; grid-template-columns: 1fr;">
         <div class="panel glass-panel" style="text-align: center;">
+          ${debugBtnHTML}
           <h2 style="font-family: var(--font-heading); font-size: 2rem; color: var(--accent-gold); margin-bottom: 10px;">
             Momento Decisivo: TIRO LIBRE
           </h2>
@@ -373,14 +406,8 @@ export class MinigameView {
               // Llamamos al nuevo método de la clase
               s.activeMinigame.resolveKick(dir);
 
-              if (s.activeMinigame.status === "ELIMINATED") {
-                s.player.reputation = Math.max(0, s.player.reputation - 15);
-                s.player.addIdolScore(s.currentTeam.id, -10, s.currentTeam.power);
-                s.player.attributes.applyDelta({ definicion: -2, mentalidad: -3 });
-              } else if (s.activeMinigame.status === "WON") {
-                s.player.reputation = Math.min(100, s.player.reputation + 25);
-                s.player.addIdolScore(s.currentTeam.id, 50, s.currentTeam.power);
-                s.player.attributes.applyDelta({ definicion: 2, mentalidad: 3 });
+              if (s.activeMinigame.status !== "PLAYING") {
+                this.deps.gameManager.handleNarrativeMinigameEnd(s.activeMinigame);
               }
             }
           });
@@ -400,13 +427,8 @@ export class MinigameView {
             // Llama al método resolveKick que actualiza el estado directamente dentro del minijuego
             s.activeMinigame.resolveKick(dir);
 
-            // Castigo / Recompensa básica narrativa
-            if (s.activeMinigame.status === "ELIMINATED") {
-              s.player.reputation = Math.max(0, s.player.reputation - 5);
-              s.player.addIdolScore(s.currentTeam.id, -5, s.currentTeam.power);
-            } else if (s.activeMinigame.status === "WON") {
-              s.player.reputation = Math.min(100, s.player.reputation + 15);
-              s.player.addIdolScore(s.currentTeam.id, 20, s.currentTeam.power);
+            if (s.activeMinigame.status !== "PLAYING") {
+              this.deps.gameManager.handleNarrativeMinigameEnd(s.activeMinigame);
             }
           }
         });
@@ -416,25 +438,15 @@ export class MinigameView {
     const btnContCup = this.container.querySelector("#btn-continue-cup");
     if (btnContCup) {
       btnContCup.onclick = () => {
-        const s = this.stateManager.getState();
-        if (s.player.qualifiedCups && s.player.qualifiedCups.length > 0) {
+        if (minigame.isDebug) {
           this.stateManager.mutate(st => {
-            const nextCup = st.player.qualifiedCups.shift();
-            st.seasonPhase = nextCup === "copa_argentina" ? "CUP_NATIONAL" : "CUP_INTERNATIONAL";
-            const playerStat = st.player.position.getPrimaryStatValue(st.player.attributes);
-            st.activeMinigame = MinigameEngine.generateCupMatrix(nextCup, st.player.calculateOVR(), playerStat, st.currentTeam.power);
-            st.screen = "CUP_MATCH";
+            st.activeMinigame = null;
+            st.screen = "DEBUG_MENU";
           });
-        } else {
-          if (this.seasonSimulator) {
-            this.seasonSimulator.finishCurrentSeason();
-          } else {
-            this.stateManager.mutate(st => {
-              st.seasonPhase = "SEASON_END";
-              st.screen = "DASHBOARD";
-            });
-          }
+          return;
         }
+
+        this.deps.gameManager.continueFromCup();
       };
     }
 
@@ -463,21 +475,23 @@ export class MinigameView {
     const btnNarCont = this.container.querySelector("#btn-narrative-continue");
     if (btnNarCont) {
       btnNarCont.onclick = () => {
-        this.stateManager.mutate(s => {
-          s.activeMinigame = null;
-          if (s.activeMidseasonEvent) {
-            s.midseasonEventResults.push({ event: s.activeMidseasonEvent, optionIndex: 0, option: s.activeMidseasonEvent.options[0] });
-          }
-          s.midseasonEventIndex += 1;
-          if (s.midseasonEventIndex < s.midseasonEvents.length) {
-            s.activeMidseasonEvent = s.midseasonEvents[s.midseasonEventIndex];
-            s.seasonPhase = "MIDSEASON_EVENT";
-            s.screen = "MIDSEASON";
-          } else {
-            s.activeMidseasonEvent = null;
-            s.seasonPhase = "SEASON_END";
-            s.screen = "DASHBOARD";
-          }
+        if (minigame.isDebug) {
+          this.stateManager.mutate(st => {
+            st.activeMinigame = null;
+            st.screen = "DEBUG_MENU";
+          });
+          return;
+        }
+        this.deps.gameManager.continueFromNarrativeMinigame();
+      };
+    }
+
+    const btnDebugReturn = this.container.querySelector("#btn-debug-return");
+    if (btnDebugReturn) {
+      btnDebugReturn.onclick = () => {
+        this.stateManager.mutate(st => {
+          st.activeMinigame = null;
+          st.screen = "DEBUG_MENU";
         });
       };
     }

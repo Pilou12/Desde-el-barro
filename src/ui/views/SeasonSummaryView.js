@@ -59,83 +59,88 @@ export class SeasonSummaryView extends View {
       `;
     }
 
-    // --- Crónica de eventos ---
+    // --- Crónica de eventos (Integrada en la narrativa) ---
     const eventResults = record.eventResults || [];
-    const eventChronicleHTML = eventResults.length > 0 ? `
-      <div style="margin-top: 24px; border-top: 1px solid var(--border-glass); padding-top: 20px; text-align: left;">
-        <h3 style="font-family: var(--font-heading); font-size: 1.1rem; margin-bottom: 16px; color: var(--accent-gold);">📋 Crónica de la Temporada</h3>
-        <div style="display: flex; flex-direction: column; gap: 14px;">
-          ${eventResults.map(({ event, option }, i) => {
-      // Construir los efectos del outcome
-      const effects = [];
-      if (option) {
-        if (option.idolBonus > 0) effects.push(`<span style="color:var(--accent-green);">+${option.idolBonus} Ídolo 💛</span>`);
-        if (option.famaBonus > 0) effects.push(`<span style="color:var(--accent-blue);">+${option.famaBonus} Reputación 🌟</span>`);
-        if (option.moneyBonus > 0) effects.push(`<span style="color:#4caf50;">+$${option.moneyBonus.toLocaleString()} USD 💵</span>`);
-        if (option.matchesPenalty) effects.push(`<span style="color:#ff6b6b;">-${option.matchesPenalty} partidos 🩺</span>`);
-        if (option.statPenalty) effects.push(`<span style="color:#ff6b6b;">Penalidad de atributo ⚠️</span>`);
-      }
-      const effectsStr = effects.length > 0
-        ? effects.join('  ·  ')
-        : '<span style="color:var(--text-muted);">Sin bonificaciones</span>';
+    let eventsListHTML = "";
+    if (eventResults.length > 0) {
+      eventsListHTML = `
+        <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+          <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 1px;">Eventos Destacados del Año:</h4>
+          <ul style="list-style-type: none; padding-left: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+            ${eventResults.map(({ event, option }) => {
+              const effects = [];
+              if (option) {
+                if (option.idolBonus > 0) effects.push(`<span style="color:var(--accent-green);">+${option.idolBonus} Ídolo</span>`);
+                if (option.famaBonus > 0) effects.push(`<span style="color:var(--accent-blue);">+${option.famaBonus} Rep.</span>`);
+                if (option.moneyBonus > 0) effects.push(`<span style="color:#4caf50;">+$${option.moneyBonus.toLocaleString()}</span>`);
+                if (option.matchesPenalty) effects.push(`<span style="color:#ff6b6b;">-${option.matchesPenalty} PJ</span>`);
+                if (option.statPenalty) effects.push(`<span style="color:#ff6b6b;">Atributos ⚠️</span>`);
+              }
+              const effectsStr = effects.length > 0 ? effects.join(' · ') : '<span style="color:var(--text-muted);">Sin efecto notable</span>';
 
-      return `
-              <div style="background: rgba(0,0,0,0.25); border-radius: 12px; padding: 14px 16px; border-left: 3px solid var(--accent-gold);">
-                <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:6px;">
-                  <span style="font-size: 0.7rem; color: var(--text-muted); font-weight:700; text-transform:uppercase;">Evento ${i + 1}</span>
-                  <span style="font-family: var(--font-heading); font-size: 1rem; color: var(--text-primary);">${event.title}</span>
-                </div>
-                ${option ? `
-                  <p style="font-size: 0.83rem; color: var(--text-secondary); margin-bottom: 8px; font-style:italic;">
-                    → Elegiste: "${option.text}"
-                  </p>
-                ` : `
-                  <p style="font-size: 0.83rem; color: var(--text-muted); margin-bottom: 8px;">No hubo acción disponible.</p>
-                `}
-                <div style="font-size: 0.82rem;">${effectsStr}</div>
-              </div>
-            `;
-    }).join('')}
+              return `
+                <li style="display: flex; align-items: baseline; gap: 8px; font-size: 0.95rem; text-shadow: none;">
+                  <span style="color: var(--accent-gold); font-size: 1.2rem; line-height: 1;">•</span>
+                  <div style="flex-grow: 1; text-align: left; line-height: 1.4;">
+                    <strong style="color: #fff; font-family: var(--font-heading);">${event.title}</strong>: 
+                    <span style="color: rgba(255,255,255,0.85); font-style: normal;">${option ? option.text : "Sin acción"}</span>
+                  </div>
+                  <div style="font-size: 0.8rem; text-align: right; white-space: nowrap;">${effectsStr}</div>
+                </li>
+              `;
+            }).join('')}
+          </ul>
         </div>
-      </div>
-    ` : '';
+      `;
+    }
 
     return `
-      <div class="glass-card" style="text-align: center;">
-        <span style="color: var(--accent-green); font-weight: 800; font-size: 0.8rem; text-transform: uppercase;">Etapa 3 de 3 • Balance Anual</span>
-        <h2 style="font-family: var(--font-heading); font-size: 2rem; margin: 8px 0;">Temporada ${record.year} completada</h2>
-        <p style="color: var(--text-secondary); margin-bottom: 16px;">Jugaste con <strong>${record.teamName}</strong> — ${record.leagueName ?? "Liga Argentina"}</p>
+      <div class="glass-card" style="text-align: center; max-width: 900px; margin: 0 auto;">
+        <span style="color: var(--accent-green); font-weight: 800; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px;">Etapa 3 de 3 • Balance Anual</span>
+        <h2 style="font-family: var(--font-heading); font-size: 2.6rem; margin: 8px 0; background: linear-gradient(to right, #ffffff, #aaaaaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Temporada ${record.year} completada</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 1.1rem;">Jugaste con <strong>${record.teamName}</strong> — ${record.leagueName ?? "Liga Argentina"}</p>
 
         ${record.wonTitle ? `
-          <div style="background: rgba(255, 215, 0, 0.15); border: 1px solid var(--accent-gold); padding: 14px; border-radius: 12px; margin-bottom: 16px;">
-            <h3 style="color: var(--accent-gold); font-family: var(--font-heading);">🏆 ¡CAMPEONES DE LA LIGA!</h3>
-            <p style="font-size: 0.85rem; color: var(--text-primary);">Diste la vuelta olímpica con tu club.</p>
+          <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.02)); border: 1px solid var(--accent-gold); padding: 16px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.1);">
+            <h3 style="color: var(--accent-gold); font-family: var(--font-heading); margin: 0; font-size: 1.4rem;">🏆 ¡CAMPEONES DE LA LIGA!</h3>
+            <p style="font-size: 0.9rem; color: var(--text-primary); margin: 4px 0 0 0;">Diste la vuelta olímpica con tu club. Historia pura.</p>
           </div>
         ` : ""}
 
-        <div class="narrative-box">
-          <span class="narrative-quote">"</span>
-          <p class="narrative-text">${narrativa}</p>
+        <!-- Narrativa Integrada con Eventos -->
+        <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 28px; margin-bottom: 24px; box-shadow: inset 0 2px 20px rgba(0,0,0,0.5);">
+          <div style="font-size: 1.15rem; color: #fff; line-height: 1.7; font-style: italic; text-shadow: 0 1px 3px rgba(0,0,0,0.8); text-align: justify;">
+            <span style="color: var(--accent-green); font-size: 2rem; line-height: 0; vertical-align: bottom; font-family: var(--font-heading);">"</span>
+            ${narrativa}
+            <span style="color: var(--accent-green); font-size: 2rem; line-height: 0; vertical-align: bottom; font-family: var(--font-heading);">"</span>
+          </div>
+          
+          ${eventsListHTML}
         </div>
         
         ${promotionAlertHTML}
         ${injuryAlertHTML}
 
-        <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 24px 0; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.03);">
+        <!-- Stats Premium -->
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 32px 0;">
           ${statsHTML}
         </div>
 
-        ${this.renderWorldSimulationUI(record)}
-
-        ${eventChronicleHTML}
-
-        <button id="btn-open-market" class="btn-primary" style="margin-top: 20px;">
+        <!-- Botón de Acción Principal -->
+        <button id="btn-open-market" class="btn-primary" style="margin-top: 10px; font-size: 1.2rem; padding: 18px 32px; width: 100%; max-width: 450px; box-shadow: 0 8px 25px rgba(0,255,170,0.25); border-radius: 12px;">
           💼 Entrar al Mercado de Pases (Ver Ofertas)
         </button>
       </div>
 
-      <div class="glass-card">
+      <div class="glass-card" style="max-width: 900px; margin: 24px auto;">
         ${this.renderAttributesPanel()}
+      </div>
+
+      <div class="glass-card" style="max-width: 900px; margin: 24px auto;">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px;">Simulación Global de la Temporada</h3>
+        </div>
+        ${this.renderWorldSimulationUI(record)}
       </div>
 
       ${this.renderSeasonsHistoryTable()}

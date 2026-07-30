@@ -19,9 +19,9 @@ export class GameManager {
     this.marketManager = new MarketManager();
   }
 
-  startNewCareer({ playerName = "El Pibe", positionKey = "delantero", mode = "random", customTeamId = null }) {
+  startNewCareer({ playerName = "El Pibe", positionKey = "delantero", mode = "random", customTeamId = null, nationality = "AR" }) {
     const leagueManager = new LeagueManager(ARGENTINE_LEAGUES, INTERNATIONAL_LEAGUES);
-    const player = new Player({ name: playerName, positionKey, initialAge: 16 });
+    const player = new Player({ name: playerName, positionKey, initialAge: 16, nationality });
 
     // Por defecto, en el primer año todos juegan Copa Argentina
     player.qualifiedCups = ["copa_argentina"];
@@ -148,32 +148,26 @@ export class GameManager {
     }
   }
 
-  resolveNarrativePenaltyKick(direction) {
+  handleNarrativeMinigameEnd(minigame) {
     this.stateManager.mutate((state) => {
-      if (!state.activeMinigame || !state.activeMinigame.isNarrative || state.activeMinigame.status !== "PLAYING") return;
-
-      const currentKick = state.activeMinigame.kicks[state.activeMinigame.currentKick];
-      currentKick.playerDirection = direction;
-
-      if (direction === currentKick.correctDirection) {
-        state.activeMinigame.playerScore += 1;
-        currentKick.scored = true;
-      } else {
-        currentKick.scored = false;
-      }
-
-      state.activeMinigame.currentKick += 1;
-
-      if (!currentKick.scored) {
-        state.activeMinigame.status = "ELIMINATED";
-        state.player.reputation = Math.max(0, state.player.reputation - 15);
-        state.player.addIdolScore(state.currentTeam.id, -10, state.currentTeam.power);
-        state.player.attributes.applyDelta({ definicion: -2, mentalidad: -3 });
-      } else if (state.activeMinigame.currentKick >= 3) {
-        state.activeMinigame.status = "WON";
-        state.player.reputation = Math.min(100, state.player.reputation + 25);
-        state.player.addIdolScore(state.currentTeam.id, 50, state.currentTeam.power);
-        state.player.attributes.applyDelta({ definicion: 2, mentalidad: 3 });
+      if (minigame.type === "penalty_shootout") {
+        if (minigame.status === "ELIMINATED") {
+          state.player.reputation = Math.max(0, state.player.reputation - 15);
+          state.player.addIdolScore(state.currentTeam.id, -10, state.currentTeam.power);
+          state.player.attributes.applyDelta({ definicion: -2, mentalidad: -3 });
+        } else if (minigame.status === "WON") {
+          state.player.reputation = Math.min(100, state.player.reputation + 25);
+          state.player.addIdolScore(state.currentTeam.id, 50, state.currentTeam.power);
+          state.player.attributes.applyDelta({ definicion: 2, mentalidad: 3 });
+        }
+      } else if (minigame.type === "free_kick") {
+        if (minigame.status === "ELIMINATED") {
+          state.player.reputation = Math.max(0, state.player.reputation - 5);
+          state.player.addIdolScore(state.currentTeam.id, -5, state.currentTeam.power);
+        } else if (minigame.status === "WON") {
+          state.player.reputation = Math.min(100, state.player.reputation + 15);
+          state.player.addIdolScore(state.currentTeam.id, 20, state.currentTeam.power);
+        }
       }
     });
   }
@@ -191,6 +185,10 @@ export class GameManager {
     });
   }
 
+  setSeasonSimulator(simulator) {
+    this.seasonSimulator = simulator;
+  }
+
   _transitionToNextCupOrEnd(state) {
     if (state.player.qualifiedCups && state.player.qualifiedCups.length > 0) {
       const nextCup = state.player.qualifiedCups.shift();
@@ -201,9 +199,19 @@ export class GameManager {
       }
       const playerStat = state.player.position.getPrimaryStatValue(state.player.attributes);
       state.activeMinigame = MinigameEngine.generateCupMatrix(nextCup, state.player.calculateOVR(), playerStat, state.currentTeam.power);
+      state.screen = "CUP_MATCH";
     } else {
       state.activeMinigame = null;
       state.seasonPhase = "SEASON_END";
+      
+      if (this.seasonSimulator) {
+        // Diferimos la llamada para evitar anidar mutaciones de estado en el mismo ciclo
+        setTimeout(() => {
+          this.seasonSimulator.finishCurrentSeason();
+        }, 0);
+      } else {
+        state.screen = "DASHBOARD";
+      }
     }
   }
 

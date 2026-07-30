@@ -45,6 +45,12 @@ export class SeasonNarrator {
       narrativa += ` Fue un año para olvidar, pero los mejores siempre vuelven más fuertes.`;
     }
 
+    if (record.wasCalledUp === true) {
+      narrativa += ` Además, cumplió el sueño de todo pibe: fue convocado a la Selección Nacional para disputar la Copa América.`;
+    } else if (record.wasCalledUp === false) {
+      narrativa += ` Mientras tanto, la Copa América la tuvo que mirar en pijama por la tele desde el sillón comiendo papitas, porque el DT de la Selección ni lo registró. Un descanso total.`;
+    }
+
     return narrativa;
   }
 

@@ -1,13 +1,3 @@
-arreglar q los penales no muestra a donde no patear cuando el jugador tiene definición
-
-arreglar el evento de patrocinio de mierda de los botines
-
-arreglar el evento de jugar en un club anterior si el jugador no jugo en otro club no tiene q aparecer
-
-terminar lo que quedo en el chat de Claude
-
-(arreglar cupos a las copas y hacer que tengan fase de grupo suda y libertadores)
-
 agregar el mundial y copa america
 
 agregar estadísticas de equipo, y que estas aumenten o disminuyan según el resultado del final de temporada
@@ -16,6 +6,25 @@ hacer mas detallado la explicación de cada estadistica
 
 terminar de pulir mas el uso de las estadísticas
 
+Rueda de prensa
+
+Consumibles 
+
 agregar mas eventos y que usen las estadísticas
 
 agregar mas cartas de entrenamiento
+
+
+agregar casino (ruleta blackjack y tragaperras)
+
+arreglar el evento de jugar en un club anterior si el jugador no jugo en otro club no tiene q aparecer
+
+arreglar el evento de patrocinio de mierda de los botines
+
+arrglar q minijuego de tiro libres dice golazo al angulo cuando pateas al medio
+
+agregar al dashboard que copas vas a jugar al año siguiente
+
+bueno ahora agregemos al catalogo de copas, el mundial de futbol
+
+si mal no recuerdo las reglas del mundial de 2026, son 48 equipos no se cuantos grupos seria eso pero cada grupo tiene 4 participantes, con 3 partidos en fase de grupo y despues 16avos de eliminacion directa seria algo asi como el formato de sudamericana basicamente.

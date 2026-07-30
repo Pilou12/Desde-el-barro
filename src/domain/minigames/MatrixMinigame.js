@@ -1,51 +1,32 @@
 import { BaseMinigame } from "./BaseMinigame.js";
 import { PenaltyShootoutMinigame } from "./PenaltyShootoutMinigame.js";
-import { getCupMatrixConfig } from "../../data/cups/cupsCatalog.js";
 
 export class MatrixMinigame extends BaseMinigame {
   /**
    * Genera el estado inicial del "Buscaminas de Copas".
+   * Ahora recibe una configuración 100% genérica.
    */
-  constructor(cupType, playerOVR, playerStat, teamPower, isNarrative = false) {
+  constructor(config, isNarrative = false) {
     super("matrix", isNarrative);
-    this.cupType = cupType;
-    this.playerStat = playerStat;
+    this.cupType = config.cupType;
 
-    // Obtener configuración desde el catálogo centralizado
-    const cupConfig = getCupMatrixConfig(cupType);
-    const size = cupConfig.gridSize ?? 64;
-    this.requiredWins = cupConfig.requiredWins ?? 6;
-    let maxDraws = cupConfig.maxDraws ?? 4;
+    const size = config.gridSize ?? 64;
+    this.hasGroupStage = config.hasGroupStage ?? false;
+    this.requiredWins = config.requiredWins ?? 6;
 
-    const collectiveStrength = (teamPower * 0.7) + (playerOVR * 0.3);
-    this.difficultyLabel = "NORMAL";
-    let winCount = 30;
-    let drawCount = 12;
+    this.currentPhase = this.hasGroupStage ? "GROUP_STAGE" : "KNOCKOUT";
+    this.groupMatchesPlayed = 0;
+    this.groupPoints = 0;
 
-    if (collectiveStrength < 50) {
-      this.difficultyLabel = "EXTREMA";
-      winCount = 15; drawCount = 15;
-    } else if (collectiveStrength < 65) {
-      this.difficultyLabel = "DIFÍCIL";
-      winCount = 22; drawCount = 15;
-    } else if (collectiveStrength < 80) {
-      this.difficultyLabel = "NORMAL";
-      winCount = 30; drawCount = 12;
-    } else {
-      this.difficultyLabel = "FÁCIL";
-      winCount = 42; drawCount = 8;
-    }
+    this.difficultyLabel = config.difficultyLabel || "NORMAL";
+    let winCount = config.winCount ?? 30;
+    let drawCount = config.drawCount ?? 12;
 
     this.grid = new Array(size).fill("LOSS");
     this._placeRandomly(this.grid, "WIN", winCount);
     this._placeRandomly(this.grid, "DRAW", drawCount);
 
-    let hints = 0;
-    if (playerStat >= 95) hints = 12;
-    else if (playerStat >= 90) hints = 8;
-    else if (playerStat >= 85) hints = 4;
-    else hints = 0;
-
+    let hints = config.hintsCount ?? 0;
     let hintsPlaced = 0;
     while (hintsPlaced < hints) {
       const idx = Math.floor(Math.random() * size);
@@ -61,6 +42,15 @@ export class MatrixMinigame extends BaseMinigame {
     this.currentOpponentTeamId = null;
     this.matchScore = null;
     this.penaltyShootout = null;
+
+    this.penaltyConfig = config.penaltyConfig || { totalKicks: 3, kicksWithHints: 0 };
+
+    if (this.cupType === "recopa") {
+      this.status = "PENALTIES";
+      this.currentOpponent = "Rival de Recopa";
+      this.matchScore = "1-1";
+      this.penaltyShootout = new PenaltyShootoutMinigame(this.penaltyConfig, false);
+    }
   }
 
   _placeRandomly(grid, type, count) {
@@ -82,10 +72,53 @@ export class MatrixMinigame extends BaseMinigame {
 
     const result = this.grid[index];
     const oppName = randomOpponentTeam ? randomOpponentTeam.name : "Rival";
-    const roundName = `Ronda ${this.currentWins + 1}`;
-
+    
     const randomGoalsPlayer = Math.floor(Math.random() * 3) + 1;
     const randomGoalsOpponent = Math.floor(Math.random() * 3) + 1;
+
+    if (this.currentPhase === "GROUP_STAGE") {
+      this.groupMatchesPlayed += 1;
+      const matchDesc = `Fase de Grupos (Partido ${this.groupMatchesPlayed}/3)`;
+
+      if (result === "WIN") {
+        this.grid[index] = "REVEALED_WIN";
+        this.groupPoints += 3;
+        const gO = Math.floor(Math.random() * randomGoalsPlayer);
+        this.matchLogs.push(`✅ Victoria ${randomGoalsPlayer}-${gO} vs ${oppName} en ${matchDesc}`);
+      } else if (result === "DRAW") {
+        this.grid[index] = "REVEALED_DRAW";
+        this.groupPoints += 1;
+        const goals = Math.floor(Math.random() * 3);
+        this.matchLogs.push(`⚖️ Empate ${goals}-${goals} vs ${oppName} en ${matchDesc}`);
+      } else {
+        this.grid[index] = "REVEALED_LOSS";
+        const gP = Math.floor(Math.random() * randomGoalsOpponent);
+        this.matchLogs.push(`❌ Derrota ${gP}-${randomGoalsOpponent} vs ${oppName} en ${matchDesc}`);
+      }
+
+      if (this.groupMatchesPlayed >= 3) {
+        if (this.groupPoints >= 4) {
+          this.currentPhase = "KNOCKOUT";
+          this.matchLogs.push(`⭐ ¡Clasificaste a la siguiente fase con ${this.groupPoints} puntos!`);
+        } else if (this.groupPoints === 3 && this.cupType !== "copa_america") {
+          this.currentPhase = "KNOCKOUT";
+          this.requiredWins = 5; // Requiere 16avos también
+          if (this.cupType === "libertadores") {
+            this.cupType = "sudamericana"; // Relegado
+            this.matchLogs.push(`⚠️ Quedaste 3ro (${this.groupPoints} pts). Relegado a 16avos de Copa Sudamericana.`);
+          } else {
+            this.matchLogs.push(`⚠️ Clasificaste con lo justo (${this.groupPoints} pts) a 16avos de Final.`);
+          }
+        } else {
+          this.status = "ELIMINATED";
+          this.matchLogs.push(`💀 Eliminado en Fase de Grupos con ${this.groupPoints} puntos.`);
+        }
+      }
+      return;
+    }
+
+    // KNOCKOUT PHASE (or cup without group stage)
+    const roundName = `Ronda ${this.currentWins + 1}`;
 
     if (result === "WIN") {
       this.currentWins += 1;
@@ -114,7 +147,7 @@ export class MatrixMinigame extends BaseMinigame {
       this.currentOpponent = oppName;
       this.matchScore = `${goals}-${goals}`;
 
-      this.penaltyShootout = new PenaltyShootoutMinigame(this.playerStat, false);
+      this.penaltyShootout = new PenaltyShootoutMinigame(this.penaltyConfig, false);
     }
   }
 

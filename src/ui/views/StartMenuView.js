@@ -7,7 +7,8 @@ import { SeasonNarrator } from '../../domain/SeasonNarrator.js';
 export class StartMenuView extends View {
   getTemplate() {
     return `
-      <div class="hero-banner">
+      <div class="hero-banner" style="position: relative;">
+        <button id="btn-goto-debug" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); border: 1px solid #ff4d4d; color: #ff4d4d; border-radius: 4px; padding: 4px 8px; font-size: 0.7rem; cursor: pointer;">🛠 Debug</button>
         <span class="badge-rarity dorada" style="font-size: 0.8rem; margin-bottom: 8px;">EDICIÓN PROFESIONAL V0.0.11</span>
         <h2 style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 900; margin-bottom: 8px;">CONVERTITE EN LEYENDA DEL FÚTBOL</h2>
         <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto; font-size: 0.95rem;">
@@ -112,8 +113,7 @@ export class StartMenuView extends View {
     const btnRandom = document.getElementById("btn-start-random");
     if (btnRandom) {
       btnRandom.onclick = () => {
-        this.deps.gameManager.startNewCareer({ mode: "random" });
-        this.deps.stateManager.update({screen: "DASHBOARD"});
+        this.deps.stateManager.update({ screen: "CUSTOM_SETUP", setupMode: "random" });
         this.deps.appRouter.render();
       };
     }
@@ -121,7 +121,15 @@ export class StartMenuView extends View {
     const btnCustom = document.getElementById("btn-start-custom");
     if (btnCustom) {
       btnCustom.onclick = () => {
-        this.deps.stateManager.update({screen: "CUSTOM_SETUP"});
+        this.deps.stateManager.update({ screen: "CUSTOM_SETUP", setupMode: "custom" });
+        this.deps.appRouter.render();
+      };
+    }
+
+    const btnDebug = document.getElementById("btn-goto-debug");
+    if (btnDebug) {
+      btnDebug.onclick = () => {
+        this.deps.stateManager.update({ screen: "DEBUG_MENU" });
         this.deps.appRouter.render();
       };
     }
